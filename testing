@@ -1,0 +1,35 @@
+#pragma config(Sensor, S1,     sonar,          sensorSONAR)
+#pragma config(Sensor, S2,     light,          sensorLightActive)
+
+//black is anything under 25
+//blue is between 25 and 45
+//white is over 45 
+
+task readSonar(){
+	while(true){
+		nxtDisplayString(0, "Object Dist: %f", SensorValue[sonar]);
+	}
+	
+	/*if(SensorValue[sonar] <= min_distance){ //detected object 
+		nxtDisplayString(1,"Object Detected");
+		return true;
+	}	
+	else{
+		return false;
+	}
+	*/
+}
+
+task readLight(){
+	while(true){
+		nxtDisplayString(1, "Light Read: %f", SensorValue[light]);
+	}
+}
+
+
+task main()
+{
+	startTask(readSonar);
+	startTask(readLight);
+	while(true){}
+}
