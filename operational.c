@@ -9,15 +9,17 @@
 //white is over 45 
 //Sonar distance for task 1 is 27
 
-int scan_motor_power = 40; //power to send to motor
+int white_border = 50; //playing field white border light value 
 
-int detect_dist = 45; //distance to charge
-//int proximity_dist = 45; //distance to consider
+int detect_dist = 150; //distance to charge
+int scan_motor_power = 50; //power to send to motor
 int charge_motor_power = 50; //power to send to motor for charge
+int reverse_motor_power = -60; //power to send to motor for reversing 
 int measured_dist; //stores current ultrasonic distance reading 
-int robotSpeed; //estimation of robot's speed (not actual speed)
 int scan_direction = 1; //clockwise = 0, counterclockwise = 1; 
 int charging = 0;
+
+int reverse_wait_time = 200; // how long to spend reversing 
 
 int readSonar(){
 	return SensorValue[sonar];
@@ -28,6 +30,7 @@ int readLight(){
 }	
 
 void pivot_clockwise(){
+	charging = 0;
 	while(readSonar() > detect_dist){
 		motor[leftMotor] = scan_motor_power;
 		motor[rightMotor] = -scan_motor_power;
@@ -37,6 +40,7 @@ void pivot_clockwise(){
 }
 
 void pivot_counterclockwise(){
+	charging = 0;
 	while(readSonar() > detect_dist){
 		motor[leftMotor] = -scan_motor_power;
 		motor[rightMotor] = scan_motor_power;
@@ -46,25 +50,39 @@ void pivot_counterclockwise(){
 }
 
 void charge(){ //charge as long locked is True 
+	charging = 1;
 	motor[leftMotor] = charge_motor_power;
 	motor[rightMotor] = charge_motor_power;
-	robot_charing = 1;
+	wait1Msec(150);
+}	
+
+void reverse(){ //move in reverse 
+	charging = 0;
+	motor[leftMotor] = reverse_motor_power;
+	motor[rightMotor] = reverse_motor_power;
+	wait1Msec(200);
 }	
 
 void search_and_destroy(){
 	measured_dist = readSonar();
-	if(measured_dist > detect_dist){
+	//nxtDisplayString(0,"%d", measured_dist);
+	nxtDisplayString(1,"%d", readLight());
+	if(readLight() >= white_border && charging != 1){ //detected playing field border
+			reverse();
+			wait1Msec(reverse_wait_time); //back up for this duration 
+	}
+	else if(measured_dist > detect_dist){
 		if(scan_direction == 0) //pivoted clockwise
 			pivot_counterclockwise(); //now try counterclockwise
 		else if(scan_direction == 1)  //pivoted counterclockwise
 			pivot_clockwise(); //now try clockwise
 	}
 	else if(measured_dist <= detect_dist){
-		wait1Msec(200);
+		wait1Msec(100);
 		charge();
 	}	
+	//nxtDisplayClearTextLine(0);
 }
-
 
 task main()
 {
@@ -72,5 +90,5 @@ task main()
 	nMotorEncoder[rightMotor] = 0;
 	while(true){
 		search_and_destroy();
-	}	
+	}
 } 
